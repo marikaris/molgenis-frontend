@@ -6,7 +6,7 @@ import { getAttributesfromMeta, getRefsFromMeta } from './metaDataService'
 
 import { DataApiResponseItem, MetaDataApiResponse } from '../types/ApiResponse'
 import { StringMap } from '../types/GeneralTypes'
-import { EntityMetaRefs } from '@/types/ApplicationState'
+import { EntityMetaRefs, TableSetting } from '@/types/ApplicationState'
 
 const levelOneRowMapper = (rowData: DataApiResponseItem, metaDataRefs: EntityMetaRefs) => {
   const row = rowData.data
@@ -33,11 +33,17 @@ const levelOneRowMapper = (rowData: DataApiResponseItem, metaDataRefs: EntityMet
   }, <StringMap>{})
 }
 
-const getTableDataWithReference = async (tableId: string, metaData: MetaDataApiResponse, numberOfInitialColumns: number) => {
-  const attributes:string[] = getAttributesfromMeta(metaData)
+const getTableDataWithReference = async (tableId: string, metaData: MetaDataApiResponse, tableSetting: TableSetting, isCustomCard:boolean) => {
+  let attributes:string[]
+  if (isCustomCard) {
+    attributes = tableSetting.customCardAttrs.split(',').map(attribute => attribute.trim())
+  } else {
+    attributes = getAttributesfromMeta(metaData).splice(0, tableSetting.collapseLimit)
+  }
+  attributes.push('id')
+
   const metaDataRefs = getRefsFromMeta(metaData)
-  const initialColumnIds = attributes.splice(0, numberOfInitialColumns)
-  const expandReferencesQuery = buildExpandedAttributesQuery(metaDataRefs, initialColumnIds)
+  const expandReferencesQuery = buildExpandedAttributesQuery(metaDataRefs, attributes)
 
   const response = await api.get(`/api/data/${tableId}?${expandReferencesQuery}`)
   const resolvedItems = response.items.map((item:any) => levelOneRowMapper(item, metaDataRefs))

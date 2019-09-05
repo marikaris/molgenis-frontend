@@ -25,7 +25,7 @@ export default {
     }
     const metaData = await metaDataRepository.fetchMetaData(state.tableName)
     commit('setMetaData', metaData)
-    const tableData = await dataRepository.getTableDataWithReference(state.tableName, metaData, state.tableSettings.collapseLimit)
+    const tableData = await dataRepository.getTableDataWithReference(state.tableName, metaData, state.tableSettings, !!(state.dataDisplayLayout === 'CardView' && state.tableSettings.customCardCode))
     commit('setTableData', tableData)
   },
   fetchRowData: async ({ commit, state }: { commit: any, state: ApplicationState }, payload: {rowId: string}) => {
@@ -37,5 +37,4 @@ export default {
     const rowData = await dataRepository.getRowDataWithReference(state.tableName, payload.rowId, metaData)
     commit('updateRowData', { rowId: payload.rowId, rowData })
   }
-
 }
